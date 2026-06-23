@@ -5,8 +5,9 @@ import type {
   AppointmentStatus,
   Settings,
 } from "../types/appointment";
+import { isExamType } from "../types/appointment";
 import { storageService } from "../services/storage";
-import { validateSlot } from "../utils/dates";
+import { isValidScheduleTime, validateSlot } from "../utils/dates";
 
 const createId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -39,18 +40,21 @@ export const useAppointments = () => {
     if (slotError) return slotError;
     if (!draft.patientName.trim()) return "Nome obrigatório.";
     if (!draft.phone.trim()) return "Telefone obrigatório.";
-    if (!draft.examType) return "Tipo de exame obrigatório.";
+    if (!isExamType(draft.examType)) return "Tipo de exame obrigatório.";
+    if (!isValidScheduleTime(draft.time)) return "Horário inválido.";
 
     const now = new Date().toISOString();
+    const examType = draft.examType;
+    const time = draft.time;
     setAppointments((current) => [
       ...current,
       {
         id: createId(),
         patientName: draft.patientName.trim(),
         phone: draft.phone.trim(),
-        examType: draft.examType,
+        examType,
         date: draft.date,
-        time: draft.time as Appointment["time"],
+        time,
         status: "Agendado",
         createdAt: now,
         updatedAt: now,
@@ -65,8 +69,11 @@ export const useAppointments = () => {
     if (slotError) return slotError;
     if (!draft.patientName.trim()) return "Nome obrigatório.";
     if (!draft.phone.trim()) return "Telefone obrigatório.";
-    if (!draft.examType) return "Tipo de exame obrigatório.";
+    if (!isExamType(draft.examType)) return "Tipo de exame obrigatório.";
+    if (!isValidScheduleTime(draft.time)) return "Horário inválido.";
 
+    const examType = draft.examType;
+    const time = draft.time;
     setAppointments((current) =>
       current.map((appointment) =>
         appointment.id === id
@@ -74,9 +81,9 @@ export const useAppointments = () => {
               ...appointment,
               patientName: draft.patientName.trim(),
               phone: draft.phone.trim(),
-              examType: draft.examType,
+              examType,
               date: draft.date,
-              time: draft.time,
+              time,
               updatedAt: new Date().toISOString(),
             }
           : appointment,

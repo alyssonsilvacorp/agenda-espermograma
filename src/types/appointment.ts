@@ -20,6 +20,9 @@ export type ExamType = (typeof EXAM_TYPES)[number];
 export type AppointmentStatus = (typeof APPOINTMENT_STATUSES)[number];
 export type ScheduleTime = (typeof SCHEDULE_TIMES)[number];
 
+export const isExamType = (value: string): value is ExamType =>
+  EXAM_TYPES.includes(value as ExamType);
+
 export type RescheduleHistoryItem = {
   fromDate: string;
   fromTime: ScheduleTime;

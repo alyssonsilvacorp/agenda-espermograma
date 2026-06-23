@@ -101,7 +101,7 @@ export default function AppointmentForm({
             Tipo de exame
             <select
               value={draft.examType}
-              onChange={(event) => setDraft({ ...draft, examType: event.target.value as ExamType })}
+              onChange={(event) => setDraft({ ...draft, examType: event.target.value as ExamType | "" })}
               className="h-11 rounded-md border border-slate-300 bg-white px-3 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
             >
               <option value="">Selecione</option>
