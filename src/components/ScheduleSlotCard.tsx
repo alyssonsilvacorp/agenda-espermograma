@@ -36,6 +36,11 @@ export default function ScheduleSlotCard({
               </div>
               <span className="text-sm text-slate-600">{appointment.examType}</span>
             </div>
+          ) : unavailableText ? (
+            <div className="flex items-center gap-2 text-sm font-medium text-rose-700">
+              <Lock size={16} aria-hidden="true" />
+              Indisponível
+            </div>
           ) : (
             <div className="flex items-center gap-2 text-sm font-medium text-emerald-700">
               <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
@@ -56,7 +61,7 @@ export default function ScheduleSlotCard({
           }`}
         >
           {occupied || disabled ? <Lock size={17} aria-hidden="true" /> : <CalendarPlus size={17} aria-hidden="true" />}
-          {occupied ? "Ocupado" : "Agendar"}
+          {occupied ? "Ocupado" : disabled ? "Indisponível" : "Agendar"}
         </button>
       </div>
     </article>

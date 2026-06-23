@@ -1,4 +1,5 @@
-import { SCHEDULE_TIMES, type Appointment, type ScheduleTime } from "../types/appointment";
+import { SCHEDULE_TIMES, type Appointment, type BlockedDate, type ScheduleTime } from "../types/appointment";
+import { isDateBlocked } from "./blockedDates";
 
 export const todayInputValue = () => {
   const now = new Date();
@@ -64,12 +65,14 @@ export const isDateFull = (appointments: Appointment[], date: string, ignoreId?:
 
 export const validateSlot = (
   appointments: Appointment[],
+  blockedDates: BlockedDate[],
   date: string,
   time: string,
   ignoreId?: string,
 ) => {
   if (!date) return "Informe uma data.";
   if (!time) return "Informe um horário.";
+  if (isDateBlocked(date, blockedDates)) return "Esta data está bloqueada para agendamento.";
   if (isWeekend(date)) return "Sábado e domingo estão indisponíveis.";
   if (!isValidScheduleTime(time)) return "Escolha um dos horários permitidos.";
   if (getAppointmentInSlot(appointments, date, time, ignoreId)) return "Este horário já está ocupado.";

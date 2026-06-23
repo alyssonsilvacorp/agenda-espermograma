@@ -1,11 +1,13 @@
 import { Download, FileUp, Trash2 } from "lucide-react";
-import type { Appointment, BackupPayload, Settings } from "../types/appointment";
+import type { Appointment, BackupPayload, BlockedDate, Settings } from "../types/appointment";
 import { storageService } from "../services/storage";
 
 type BackupManagerProps = {
   appointments: Appointment[];
+  blockedDates: BlockedDate[];
   settings: Settings;
   importAppointments: (appointments: Appointment[]) => void;
+  importBlockedDates: (blockedDates: BlockedDate[]) => void;
   setSettings: (settings: Settings) => void;
   clearAll: () => void;
   notify: (message: string) => void;
@@ -13,8 +15,10 @@ type BackupManagerProps = {
 
 export default function BackupManager({
   appointments,
+  blockedDates,
   settings,
   importAppointments,
+  importBlockedDates,
   setSettings,
   clearAll,
   notify,
@@ -25,6 +29,7 @@ export default function BackupManager({
       exportedAt: new Date().toISOString(),
       appointments,
       settings,
+      blockedDates,
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -42,6 +47,7 @@ export default function BackupManager({
       const payload = JSON.parse(await file.text()) as BackupPayload;
       storageService.importBackup(payload);
       importAppointments(payload.appointments ?? []);
+      importBlockedDates(payload.blockedDates ?? []);
       setSettings(payload.settings ?? settings);
       notify("Backup importado.");
     } catch {

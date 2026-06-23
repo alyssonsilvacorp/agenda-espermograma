@@ -2,10 +2,11 @@ import { useState } from "react";
 import AppointmentForm from "../components/AppointmentForm";
 import AppointmentList from "../components/AppointmentList";
 import RescheduleModal from "../components/RescheduleModal";
-import type { Appointment, AppointmentDraft, AppointmentStatus } from "../types/appointment";
+import type { Appointment, AppointmentDraft, AppointmentStatus, BlockedDate } from "../types/appointment";
 
 type AgendamentosProps = {
   appointments: Appointment[];
+  blockedDates: BlockedDate[];
   updateAppointment: (id: string, draft: AppointmentDraft) => string | null;
   updateStatus: (id: string, status: AppointmentStatus) => void;
   requestReschedule: (id: string, reason?: string) => string | null;
@@ -15,6 +16,7 @@ type AgendamentosProps = {
 
 export default function Agendamentos({
   appointments,
+  blockedDates,
   updateAppointment,
   updateStatus,
   requestReschedule,
@@ -55,6 +57,7 @@ export default function Agendamentos({
         open={Boolean(editing)}
         title="Editar agendamento"
         appointment={editing}
+        blockedDates={blockedDates}
         onClose={() => setEditing(undefined)}
         onSubmit={submitEdit}
       />
@@ -62,6 +65,7 @@ export default function Agendamentos({
       <RescheduleModal
         open={Boolean(rescheduling)}
         appointment={rescheduling}
+        blockedDates={blockedDates}
         onClose={() => setRescheduling(undefined)}
         onRequestOnly={(reason) => {
           if (!rescheduling) return "Agendamento não encontrado.";

@@ -6,9 +6,11 @@ import {
   SCHEDULE_TIMES,
   type Appointment,
   type AppointmentDraft,
+  type BlockedDate,
   type ExamType,
   type ScheduleTime,
 } from "../types/appointment";
+import { getBlockedDateInfo } from "../utils/blockedDates";
 
 type AppointmentFormProps = {
   open: boolean;
@@ -16,6 +18,7 @@ type AppointmentFormProps = {
   initialDate?: string;
   initialTime?: ScheduleTime | "";
   appointment?: Appointment;
+  blockedDates: BlockedDate[];
   onClose: () => void;
   onSubmit: (draft: AppointmentDraft) => string | null;
 };
@@ -34,6 +37,7 @@ export default function AppointmentForm({
   initialDate = "",
   initialTime = "",
   appointment,
+  blockedDates,
   onClose,
   onSubmit,
 }: AppointmentFormProps) {
@@ -60,6 +64,10 @@ export default function AppointmentForm({
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
+    if (getBlockedDateInfo(draft.date, blockedDates)) {
+      setError("Esta data está bloqueada para agendamento.");
+      return;
+    }
     const submitError = onSubmit(draft);
     if (submitError) {
       setError(submitError);
@@ -67,6 +75,8 @@ export default function AppointmentForm({
     }
     onClose();
   };
+
+  const blockedDateInfo = getBlockedDateInfo(draft.date, blockedDates);
 
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center bg-slate-950/40 p-0 sm:items-center sm:p-4 no-print">
@@ -79,6 +89,11 @@ export default function AppointmentForm({
         </div>
 
         {error && <div className="mt-4 rounded-md bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700">{error}</div>}
+        {blockedDateInfo && (
+          <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800">
+            Esta data está bloqueada para agendamento. {blockedDateInfo.reason}
+          </div>
+        )}
 
         <div className="mt-5 grid gap-4 sm:grid-cols-2">
           <label className="grid gap-1.5 text-sm font-medium text-slate-700 sm:col-span-2">

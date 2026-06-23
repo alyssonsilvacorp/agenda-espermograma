@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { CalendarClock, X } from "lucide-react";
-import { SCHEDULE_TIMES, type Appointment, type ScheduleTime } from "../types/appointment";
+import { SCHEDULE_TIMES, type Appointment, type BlockedDate, type ScheduleTime } from "../types/appointment";
 import { formatDate } from "../utils/dates";
+import { getBlockedDateInfo } from "../utils/blockedDates";
 
 type RescheduleModalProps = {
   appointment?: Appointment;
   open: boolean;
+  blockedDates: BlockedDate[];
   onClose: () => void;
   onRequestOnly: (reason?: string) => string | null;
   onReschedule: (newDate: string, newTime: string, reason?: string) => string | null;
@@ -14,6 +16,7 @@ type RescheduleModalProps = {
 export default function RescheduleModal({
   appointment,
   open,
+  blockedDates,
   onClose,
   onRequestOnly,
   onReschedule,
@@ -43,6 +46,10 @@ export default function RescheduleModal({
   };
 
   const submitReschedule = () => {
+    if (getBlockedDateInfo(newDate, blockedDates)) {
+      setError("Não é possível reagendar para uma data bloqueada.");
+      return;
+    }
     const submitError = onReschedule(newDate, newTime, reason);
     if (submitError) {
       setError(submitError);
@@ -50,6 +57,8 @@ export default function RescheduleModal({
     }
     onClose();
   };
+
+  const blockedDateInfo = getBlockedDateInfo(newDate, blockedDates);
 
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center bg-slate-950/40 p-0 sm:items-center sm:p-4 no-print">
@@ -62,6 +71,11 @@ export default function RescheduleModal({
         </div>
 
         {error && <div className="mt-4 rounded-md bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700">{error}</div>}
+        {blockedDateInfo && (
+          <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-800">
+            Não é possível reagendar para uma data bloqueada. {blockedDateInfo.reason}
+          </div>
+        )}
 
         <div className="mt-5 grid gap-3 rounded-md bg-slate-50 p-4 text-sm text-slate-700 sm:grid-cols-2">
           <p><strong>Nome:</strong> {appointment.patientName}</p>
