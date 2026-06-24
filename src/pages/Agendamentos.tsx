@@ -70,6 +70,7 @@ export default function Agendamentos({
         open={Boolean(rescheduling)}
         appointment={rescheduling}
         blockedDates={blockedDates}
+        requestAdminAccess={requestAdminAccess}
         onClose={() => setRescheduling(undefined)}
         onRequestOnly={(reason) => {
           if (!rescheduling) return "Agendamento não encontrado.";

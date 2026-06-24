@@ -28,12 +28,6 @@ export default function App() {
     setPage(nextPage);
   };
 
-  const lockAdminAccess = () => {
-    adminAccess.lockAdminAccess();
-    setPage("dashboard");
-    notify("Acesso administrativo bloqueado.");
-  };
-
   return (
     <Layout activePage={page} onNavigate={navigate}>
       {page === "dashboard" && <Dashboard {...appointmentsApi} onNavigate={setPage} />}
@@ -45,12 +39,11 @@ export default function App() {
           requestAdminAccess={adminAccess.requestAdminAccess}
         />
       )}
-      {page === "configuracoes" && adminAccess.isAuthorized && (
+      {page === "configuracoes" && (
         <Configuracoes
           {...appointmentsApi}
           notify={notify}
           requestAdminAccess={adminAccess.requestAdminAccess}
-          lockAdminAccess={lockAdminAccess}
         />
       )}
       <Toast message={toast} />

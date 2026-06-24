@@ -11,6 +11,7 @@ type RescheduleModalProps = {
   onClose: () => void;
   onRequestOnly: (reason?: string) => string | null;
   onReschedule: (newDate: string, newTime: string, reason?: string) => string | null;
+  requestAdminAccess: (action: () => void) => void;
 };
 
 export default function RescheduleModal({
@@ -20,6 +21,7 @@ export default function RescheduleModal({
   onClose,
   onRequestOnly,
   onReschedule,
+  requestAdminAccess,
 }: RescheduleModalProps) {
   const [newDate, setNewDate] = useState("");
   const [newTime, setNewTime] = useState<ScheduleTime | "">("");
@@ -37,25 +39,29 @@ export default function RescheduleModal({
   if (!open || !appointment) return null;
 
   const submitRequestOnly = () => {
-    const submitError = onRequestOnly(reason);
-    if (submitError) {
-      setError(submitError);
-      return;
-    }
-    onClose();
+    requestAdminAccess(() => {
+      const submitError = onRequestOnly(reason);
+      if (submitError) {
+        setError(submitError);
+        return;
+      }
+      onClose();
+    });
   };
 
   const submitReschedule = () => {
-    if (getBlockedDateInfo(newDate, blockedDates)) {
-      setError("Não é possível reagendar para uma data bloqueada.");
-      return;
-    }
-    const submitError = onReschedule(newDate, newTime, reason);
-    if (submitError) {
-      setError(submitError);
-      return;
-    }
-    onClose();
+    requestAdminAccess(() => {
+      if (getBlockedDateInfo(newDate, blockedDates)) {
+        setError("Não é possível reagendar para uma data bloqueada.");
+        return;
+      }
+      const submitError = onReschedule(newDate, newTime, reason);
+      if (submitError) {
+        setError(submitError);
+        return;
+      }
+      onClose();
+    });
   };
 
   const blockedDateInfo = getBlockedDateInfo(newDate, blockedDates);

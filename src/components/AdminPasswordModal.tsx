@@ -44,7 +44,7 @@ export default function AdminPasswordModal({
             </div>
             <div>
               <h2 className="text-lg font-semibold text-slate-950">Acesso administrativo</h2>
-              <p className="text-sm text-slate-500">Informe a senha para continuar.</p>
+              <p className="text-sm text-slate-500">Confirme a senha para executar esta ação.</p>
             </div>
           </div>
           <button
@@ -86,7 +86,7 @@ export default function AdminPasswordModal({
             type="submit"
             className="min-h-10 rounded-md bg-sky-700 px-4 text-sm font-semibold text-white hover:bg-sky-800"
           >
-            Liberar acesso
+            Confirmar ação
           </button>
         </div>
       </form>
