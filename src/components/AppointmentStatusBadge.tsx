@@ -1,13 +1,13 @@
 import type { AppointmentStatus } from "../types/appointment";
 
 const statusClasses: Record<AppointmentStatus, string> = {
-  Agendado: "bg-blue-100 text-blue-800",
-  Confirmado: "bg-emerald-100 text-emerald-800",
+  Agendado: "bg-sky-100 text-sky-800",
+  Confirmado: "bg-teal-100 text-teal-800",
   "Solicitou reagendamento": "bg-amber-100 text-amber-800",
   Reagendado: "bg-cyan-100 text-cyan-800",
   Cancelado: "bg-rose-100 text-rose-800",
   Faltou: "bg-slate-200 text-slate-800",
-  Realizado: "bg-green-100 text-green-800",
+  Realizado: "bg-cyan-100 text-cyan-800",
 };
 
 export default function AppointmentStatusBadge({ status }: { status: AppointmentStatus }) {

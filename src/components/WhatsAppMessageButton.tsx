@@ -8,9 +8,19 @@ type WhatsAppMessageButtonProps = {
   label: string;
   mode: "copy" | "open";
   onDone: (message: string) => void;
+  compact?: boolean;
+  menuItem?: boolean;
 };
 
-export default function WhatsAppMessageButton({ appointment, type, label, mode, onDone }: WhatsAppMessageButtonProps) {
+export default function WhatsAppMessageButton({
+  appointment,
+  type,
+  label,
+  mode,
+  onDone,
+  compact,
+  menuItem,
+}: WhatsAppMessageButtonProps) {
   const handleClick = async () => {
     const message = buildWhatsAppMessage(appointment, type);
     if (mode === "copy") {
@@ -26,7 +36,13 @@ export default function WhatsAppMessageButton({ appointment, type, label, mode, 
     <button
       type="button"
       onClick={handleClick}
-      className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-md border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-700 hover:border-emerald-200 hover:bg-emerald-50"
+      className={
+        menuItem
+          ? "menu-action text-left"
+          : `inline-flex items-center justify-center gap-1 rounded-md border border-teal-200 bg-white text-xs font-semibold text-teal-700 hover:bg-teal-50 ${
+              compact ? "min-h-8 px-2" : "min-h-9 px-2.5"
+            }`
+      }
     >
       {mode === "copy" ? <Clipboard size={14} aria-hidden="true" /> : <MessageCircle size={14} aria-hidden="true" />}
       {label}

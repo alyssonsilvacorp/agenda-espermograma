@@ -14,6 +14,7 @@ type BlockedDatesManagerProps = {
   addBlockedDate: (date: string, reason: string, type: BlockedDateType | "") => string | null;
   removeBlockedDate: (id: string) => void;
   notify: (message: string) => void;
+  requestAdminAccess: (action: () => void) => void;
 };
 
 export default function BlockedDatesManager({
@@ -22,6 +23,7 @@ export default function BlockedDatesManager({
   addBlockedDate,
   removeBlockedDate,
   notify,
+  requestAdminAccess,
 }: BlockedDatesManagerProps) {
   const [date, setDate] = useState("");
   const [reason, setReason] = useState("");
@@ -29,16 +31,18 @@ export default function BlockedDatesManager({
   const [error, setError] = useState("");
 
   const saveBlockedDate = (targetDate = date) => {
-    const submitError = addBlockedDate(targetDate, reason, type);
-    if (submitError) {
-      setError(submitError);
-      return;
-    }
-    setError("");
-    setDate("");
-    setReason("");
-    setType("");
-    notify(targetDate === todayInputValue() ? "Agenda de hoje fechada." : "Data bloqueada.");
+    requestAdminAccess(() => {
+      const submitError = addBlockedDate(targetDate, reason, type);
+      if (submitError) {
+        setError(submitError);
+        return;
+      }
+      setError("");
+      setDate("");
+      setReason("");
+      setType("");
+      notify(targetDate === todayInputValue() ? "Agenda de hoje fechada." : "Data bloqueada.");
+    });
   };
 
   const editBlockedDate = (blockedDate: BlockedDate) => {
@@ -49,8 +53,10 @@ export default function BlockedDatesManager({
   };
 
   const unblockDate = (blockedDate: BlockedDate) => {
-    removeBlockedDate(blockedDate.id);
-    notify("Data desbloqueada.");
+    requestAdminAccess(() => {
+      removeBlockedDate(blockedDate.id);
+      notify("Data desbloqueada.");
+    });
   };
 
   return (

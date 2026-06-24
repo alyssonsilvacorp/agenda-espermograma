@@ -5,6 +5,7 @@ import DatePicker from "../components/DatePicker";
 import PrintDaySchedule from "../components/PrintDaySchedule";
 import type { Appointment, BlockedDate, BlockedDateType, Settings } from "../types/appointment";
 import { todayInputValue } from "../utils/dates";
+import { LockKeyhole } from "lucide-react";
 
 type ConfiguracoesProps = {
   appointments: Appointment[];
@@ -17,6 +18,8 @@ type ConfiguracoesProps = {
   removeBlockedDate: (id: string) => void;
   clearAll: () => void;
   notify: (message: string) => void;
+  requestAdminAccess: (action: () => void) => void;
+  lockAdminAccess: () => void;
 };
 
 export default function Configuracoes({
@@ -30,6 +33,8 @@ export default function Configuracoes({
   removeBlockedDate,
   clearAll,
   notify,
+  requestAdminAccess,
+  lockAdminAccess,
 }: ConfiguracoesProps) {
   const [selectedDate, setSelectedDate] = useState(todayInputValue());
 
@@ -45,22 +50,14 @@ export default function Configuracoes({
           Nome da unidade/clínica
           <input
             value={settings.clinicName}
-            onChange={(event) => setSettings({ ...settings, clinicName: event.target.value })}
+            onChange={(event) => {
+              const clinicName = event.target.value;
+              requestAdminAccess(() => setSettings({ ...settings, clinicName }));
+            }}
             className="h-11 rounded-md border border-slate-300 px-3 outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100"
           />
         </label>
       </section>
-
-      <BackupManager
-        appointments={appointments}
-        blockedDates={blockedDates}
-        settings={settings}
-        importAppointments={importAppointments}
-        importBlockedDates={importBlockedDates}
-        setSettings={setSettings}
-        clearAll={clearAll}
-        notify={notify}
-      />
 
       <BlockedDatesManager
         appointments={appointments}
@@ -68,9 +65,32 @@ export default function Configuracoes({
         addBlockedDate={addBlockedDate}
         removeBlockedDate={removeBlockedDate}
         notify={notify}
+        requestAdminAccess={requestAdminAccess}
       />
 
+      <section className="grid gap-3 rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+        <div>
+          <h3 className="text-lg font-semibold text-slate-950">Backup e restauração</h3>
+          <p className="text-sm text-slate-500">Exporte os dados ou restaure um arquivo JSON.</p>
+        </div>
+        <BackupManager
+          appointments={appointments}
+          blockedDates={blockedDates}
+          settings={settings}
+          importAppointments={importAppointments}
+          importBlockedDates={importBlockedDates}
+          setSettings={setSettings}
+          clearAll={clearAll}
+          notify={notify}
+          requestAdminAccess={requestAdminAccess}
+        />
+      </section>
+
       <section className="grid gap-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm">
+        <div>
+          <h3 className="text-lg font-semibold text-slate-950">Impressão da agenda</h3>
+          <p className="text-sm text-slate-500">Selecione uma data para gerar a versão de impressão.</p>
+        </div>
         <DatePicker label="Data para impressão" value={selectedDate} onChange={setSelectedDate} />
         <PrintDaySchedule
           appointments={appointments}
@@ -78,6 +98,23 @@ export default function Configuracoes({
           selectedDate={selectedDate}
           settings={settings}
         />
+      </section>
+
+      <section className="grid gap-4 rounded-md border border-sky-200 bg-sky-50 p-4">
+        <div>
+          <h3 className="text-lg font-semibold text-slate-950">Acesso administrativo</h3>
+          <p className="text-sm text-slate-600">
+            Use esta opção para exigir a senha novamente ao acessar configurações ou executar ações sensíveis.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={lockAdminAccess}
+          className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-md bg-sky-700 px-4 text-sm font-semibold text-white hover:bg-sky-800 sm:w-fit"
+        >
+          <LockKeyhole size={17} aria-hidden="true" />
+          Bloquear acesso administrativo
+        </button>
       </section>
     </div>
   );

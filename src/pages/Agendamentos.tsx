@@ -12,6 +12,7 @@ type AgendamentosProps = {
   requestReschedule: (id: string, reason?: string) => string | null;
   rescheduleAppointment: (id: string, newDate: string, newTime: string, reason?: string) => string | null;
   notify: (message: string) => void;
+  requestAdminAccess: (action: () => void) => void;
 };
 
 export default function Agendamentos({
@@ -22,13 +23,16 @@ export default function Agendamentos({
   requestReschedule,
   rescheduleAppointment,
   notify,
+  requestAdminAccess,
 }: AgendamentosProps) {
   const [editing, setEditing] = useState<Appointment | undefined>();
   const [rescheduling, setRescheduling] = useState<Appointment | undefined>();
 
   const changeStatus = (id: string, status: AppointmentStatus) => {
-    updateStatus(id, status);
-    notify(`Status alterado para ${status}.`);
+    requestAdminAccess(() => {
+      updateStatus(id, status);
+      notify(`Status alterado para ${status}.`);
+    });
   };
 
   const submitEdit = (draft: AppointmentDraft) => {
@@ -47,9 +51,9 @@ export default function Agendamentos({
 
       <AppointmentList
         appointments={appointments}
-        onEdit={setEditing}
+        onEdit={(appointment) => requestAdminAccess(() => setEditing(appointment))}
         onStatus={changeStatus}
-        onReschedule={setRescheduling}
+        onReschedule={(appointment) => requestAdminAccess(() => setRescheduling(appointment))}
         notify={notify}
       />
 

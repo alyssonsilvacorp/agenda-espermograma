@@ -20,7 +20,7 @@ export default function DashboardCards({ cards }: { cards: DashboardCard[] }) {
                 <strong className="mt-2 block text-3xl font-semibold text-slate-950">{card.value}</strong>
                 {card.helper && <span className="mt-1 block text-xs text-slate-500">{card.helper}</span>}
               </div>
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-blue-50 text-blue-700">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-sky-50 text-sky-700">
                 <Icon size={21} aria-hidden="true" />
               </div>
             </div>

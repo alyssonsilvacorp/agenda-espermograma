@@ -19,8 +19,8 @@ export default function Navbar({ activePage, onNavigate }: NavbarProps) {
             onClick={() => onNavigate(item.key)}
             className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-md px-3 text-sm font-medium transition ${
               isActive
-                ? "bg-blue-700 text-white shadow-sm"
-                : "border border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:bg-blue-50"
+                ? "bg-sky-700 text-white shadow-sm"
+                : "border border-slate-200 bg-white text-slate-600 hover:border-sky-200 hover:bg-sky-50"
             }`}
           >
             <Icon size={18} aria-hidden="true" />

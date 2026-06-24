@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { Download, FileUp, Trash2 } from "lucide-react";
 import type { Appointment, BackupPayload, BlockedDate, Settings } from "../types/appointment";
 import { storageService } from "../services/storage";
@@ -11,6 +12,7 @@ type BackupManagerProps = {
   setSettings: (settings: Settings) => void;
   clearAll: () => void;
   notify: (message: string) => void;
+  requestAdminAccess: (action: () => void) => void;
 };
 
 export default function BackupManager({
@@ -22,7 +24,9 @@ export default function BackupManager({
   setSettings,
   clearAll,
   notify,
+  requestAdminAccess,
 }: BackupManagerProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const exportBackup = () => {
     const payload: BackupPayload = {
       version: 1,
@@ -56,9 +60,11 @@ export default function BackupManager({
   };
 
   const handleClear = () => {
-    if (!window.confirm("Tem certeza que deseja limpar todos os dados?")) return;
-    clearAll();
-    notify("Dados limpos.");
+    requestAdminAccess(() => {
+      if (!window.confirm("Tem certeza que deseja limpar todos os dados?")) return;
+      clearAll();
+      notify("Dados limpos.");
+    });
   };
 
   return (
@@ -67,11 +73,21 @@ export default function BackupManager({
         <Download size={17} aria-hidden="true" />
         Exportar backup
       </button>
-      <label className="inline-flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+      <button
+        type="button"
+        onClick={() => requestAdminAccess(() => fileInputRef.current?.click())}
+        className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+      >
         <FileUp size={17} aria-hidden="true" />
         Importar backup
-        <input type="file" accept="application/json" className="sr-only" onChange={(event) => importBackup(event.target.files?.[0])} />
-      </label>
+      </button>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="application/json"
+        className="sr-only"
+        onChange={(event) => importBackup(event.target.files?.[0])}
+      />
       <button type="button" onClick={handleClear} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md border border-rose-300 bg-white px-4 text-sm font-semibold text-rose-700 hover:bg-rose-50">
         <Trash2 size={17} aria-hidden="true" />
         Limpar dados

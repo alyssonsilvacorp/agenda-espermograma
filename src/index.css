@@ -4,7 +4,7 @@
 
 :root {
   color: #132238;
-  background: #f4f8fb;
+  background: #f5f8fa;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -22,6 +22,16 @@ input,
 select,
 textarea {
   font: inherit;
+}
+
+summary::-webkit-details-marker {
+  display: none;
+}
+
+@layer components {
+  .menu-action {
+    @apply flex min-h-8 w-full items-center gap-2 rounded-md px-2 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50;
+  }
 }
 
 @media print {

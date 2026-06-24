@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Plus } from "lucide-react";
+import { Info, Plus } from "lucide-react";
 import AppointmentForm from "../components/AppointmentForm";
 import DatePicker from "../components/DatePicker";
 import ScheduleSlotCard from "../components/ScheduleSlotCard";
@@ -62,6 +62,27 @@ export default function Agenda({
 
   return (
     <div className="grid gap-6">
+      <section className="rounded-md border border-sky-200 bg-sky-50 p-4">
+        <div className="flex items-start gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-white text-sky-700 shadow-sm">
+            <Info size={19} aria-hidden="true" />
+          </div>
+          <div className="grid gap-2 text-sm leading-6 text-slate-700">
+            <h2 className="text-base font-semibold text-sky-950">
+              Instruções para Espermograma e Espermocultura
+            </h2>
+            <p>
+              A amostra pode ser coletada entre 2 a 7 dias de abstinência sexual para paciente que não realizou vasectomia.
+            </p>
+            <p>Para paciente que já realizou vasectomia, não é necessário abstinência.</p>
+            <p>
+              Para pacientes após o procedimento de vasectomia, sugere-se realizar o exame após 30 a 40 ejaculações,
+              para esvaziar completamente os epidídimos e/ou conforme critério médico.
+            </p>
+          </div>
+        </div>
+      </section>
+
       <section className="flex flex-col gap-4 rounded-md border border-slate-200 bg-white p-4 shadow-sm lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h2 className="text-2xl font-semibold text-slate-950">Agenda</h2>
@@ -74,7 +95,7 @@ export default function Agenda({
               type="button"
               onClick={() => openForm()}
               disabled={weekend || full}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-blue-700 px-4 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-sky-700 px-4 text-sm font-semibold text-white hover:bg-sky-800 disabled:cursor-not-allowed disabled:bg-slate-300"
             >
               <Plus size={17} aria-hidden="true" />
               Novo agendamento
