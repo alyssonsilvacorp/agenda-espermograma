@@ -38,6 +38,26 @@ export const isWeekend = (date: string) => {
 export const isValidScheduleTime = (time: string): time is ScheduleTime =>
   SCHEDULE_TIMES.includes(time as ScheduleTime);
 
+export const isDateBeforeToday = (date: string) => {
+  if (!date) return false;
+  return date < todayInputValue();
+};
+
+export const isScheduleSlotExpired = (date: string, time: string) => {
+  if (!date || !time || !isValidScheduleTime(time)) return false;
+
+  if (date < todayInputValue()) return true;
+  if (date > todayInputValue()) return false;
+
+  const [year, month, day] = date.split("-").map(Number);
+  const [hour, minute] = time.split(":").map(Number);
+
+  const slotDateTime = new Date(year, month - 1, day, hour, minute, 0, 0);
+  const now = new Date();
+
+  return slotDateTime.getTime() <= now.getTime();
+};
+
 export const getAppointmentsByDate = (appointments: Appointment[], date: string) =>
   appointments.filter((appointment) => appointment.date === date);
 
@@ -75,6 +95,7 @@ export const validateSlot = (
   if (isDateBlocked(date, blockedDates)) return "Esta data está bloqueada para agendamento.";
   if (isWeekend(date)) return "Sábado e domingo estão indisponíveis.";
   if (!isValidScheduleTime(time)) return "Escolha um dos horários permitidos.";
+  if (isScheduleSlotExpired(date, time)) return "Não é possível agendar um horário que já passou.";
   if (getAppointmentInSlot(appointments, date, time, ignoreId)) return "Este horário já está ocupado.";
   if (isDateFull(appointments, date, ignoreId)) return "Todas as vagas deste dia já foram preenchidas.";
   return null;

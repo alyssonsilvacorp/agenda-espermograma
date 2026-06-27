@@ -15,6 +15,7 @@ import {
   formatLongDate,
   getAppointmentInSlot,
   isDateFull,
+  isScheduleSlotExpired,
   isWeekend,
   todayInputValue,
 } from "../utils/dates";
@@ -40,16 +41,36 @@ export default function Agenda({
     () => appointments.filter((appointment) => appointment.date === selectedDate),
     [appointments, selectedDate],
   );
+
   const activeDayAppointments = dayAppointments.filter(
     (appointment) => appointment.status !== "Cancelado",
   );
+
   const weekend = isWeekend(selectedDate);
   const full = isDateFull(appointments, selectedDate);
   const blockedDateInfo = getBlockedDateInfo(selectedDate, blockedDates);
   const blocked = Boolean(blockedDateInfo);
 
+  const availableTimes = useMemo(
+    () =>
+      SCHEDULE_TIMES.filter(
+        (time) =>
+          !getAppointmentInSlot(appointments, selectedDate, time) &&
+          !isScheduleSlotExpired(selectedDate, time),
+      ),
+    [appointments, selectedDate],
+  );
+
+  const noAvailableTimes = !blocked && !weekend && availableTimes.length === 0;
+
   const openForm = (time?: ScheduleTime) => {
     if (blocked) return;
+
+    if (time && isScheduleSlotExpired(selectedDate, time)) {
+      notify("Não é possível agendar um horário que já passou.");
+      return;
+    }
+
     setSelectedTime(time ?? "");
     setFormOpen(true);
   };
@@ -94,7 +115,7 @@ export default function Agenda({
             <button
               type="button"
               onClick={() => openForm()}
-              disabled={weekend || full}
+              disabled={weekend || full || noAvailableTimes}
               className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-sky-700 px-4 text-sm font-semibold text-white hover:bg-sky-800 disabled:cursor-not-allowed disabled:bg-slate-300"
             >
               <Plus size={17} aria-hidden="true" />
@@ -131,23 +152,35 @@ export default function Agenda({
         </div>
       )}
 
+      {!blocked && !weekend && !full && noAvailableTimes && (
+        <div className="rounded-md border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
+          Não há horários disponíveis para agendamento nesta data.
+        </div>
+      )}
+
       <section className="grid gap-3">
-        {SCHEDULE_TIMES.map((time) => (
-          <ScheduleSlotCard
-            key={time}
-            time={time}
-            appointment={getAppointmentInSlot(appointments, selectedDate, time)}
-            disabled={blocked || weekend || full}
-            unavailableText={
-              blocked
-                ? "Agenda fechada nesta data"
-                : weekend
-                  ? "Fim de semana indisponível"
-                  : undefined
-            }
-            onSchedule={openForm}
-          />
-        ))}
+        {SCHEDULE_TIMES.map((time) => {
+          const expired = isScheduleSlotExpired(selectedDate, time);
+
+          return (
+            <ScheduleSlotCard
+              key={time}
+              time={time}
+              appointment={getAppointmentInSlot(appointments, selectedDate, time)}
+              disabled={blocked || weekend || full || expired}
+              unavailableText={
+                blocked
+                  ? "Agenda fechada nesta data"
+                  : weekend
+                    ? "Fim de semana indisponível"
+                    : expired
+                      ? "Horário encerrado"
+                      : undefined
+              }
+              onSchedule={openForm}
+            />
+          );
+        })}
       </section>
 
       <div className="grid gap-3 rounded-md border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-3">
@@ -158,7 +191,7 @@ export default function Agenda({
           Agendamentos: <strong>{activeDayAppointments.length}</strong>
         </span>
         <span className="text-sm text-slate-600">
-          Disponíveis: <strong>{blocked ? 0 : SCHEDULE_TIMES.length - activeDayAppointments.length}</strong>
+          Disponíveis: <strong>{blocked || weekend ? 0 : availableTimes.length}</strong>
         </span>
       </div>
 

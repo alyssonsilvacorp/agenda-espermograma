@@ -29,7 +29,7 @@ export default function Layout({ activePage, onNavigate, children }: LayoutProps
             {logoAvailable ? (
               <img
                 src="/hapvida-logo.png"
-                alt="Hapvida NotreLabs"
+                alt="Hapvida Diagnóstico"
                 onError={() => setLogoAvailable(false)}
                 className="h-12 w-28 shrink-0 object-contain object-left sm:h-14 sm:w-36"
               />
