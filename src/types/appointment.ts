@@ -49,10 +49,14 @@ export type Appointment = {
   id: string;
   patientName: string;
   phone: string;
+  healthCardNumber?: string;
   examType: ExamType;
+  healthPlan?: string;
   date: string;
   time: ScheduleTime;
   status: AppointmentStatus;
+  notes?: string;
+  source?: string;
   createdAt: string;
   updatedAt: string;
   rescheduleHistory: RescheduleHistoryItem[];
@@ -61,9 +65,12 @@ export type Appointment = {
 export type AppointmentDraft = {
   patientName: string;
   phone: string;
+  healthCardNumber?: string;
   examType: ExamType | "";
   date: string;
   time: ScheduleTime | "";
+  notes?: string;
+  source?: string;
 };
 
 export type Settings = {

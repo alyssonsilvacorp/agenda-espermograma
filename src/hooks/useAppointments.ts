@@ -9,30 +9,46 @@ import type {
 } from "../types/appointment";
 import { isBlockedDateType, isExamType } from "../types/appointment";
 import { storageService } from "../services/storage";
+import { appointmentsRepository } from "../services/appointmentsRepository";
 import { isValidScheduleTime, validateSlot } from "../utils/dates";
 import { isDateBlocked } from "../utils/blockedDates";
 
-const createId = () =>
-  typeof crypto !== "undefined" && "randomUUID" in crypto
-    ? crypto.randomUUID()
-    : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-
 export const useAppointments = () => {
-  const [appointments, setAppointments] = useState<Appointment[]>(() => storageService.getAppointments());
-  const [blockedDates, setBlockedDates] = useState<BlockedDate[]>(() => storageService.getBlockedDates());
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [blockedDates, setBlockedDates] = useState<BlockedDate[]>([]);
   const [settings, setSettingsState] = useState<Settings>(() => storageService.getSettings());
+  const [loading, setLoading] = useState(true);
+
+  const showDatabaseError = (error: unknown) => {
+    const message = appointmentsRepository.getErrorMessage(error);
+    window.alert(message);
+  };
+
+  const loadDatabaseData = async () => {
+    try {
+      setLoading(true);
+
+      const [appointmentsData, blockedDatesData] = await Promise.all([
+        appointmentsRepository.listAppointments(),
+        appointmentsRepository.listBlockedDates(),
+      ]);
+
+      setAppointments(appointmentsData);
+      setBlockedDates(blockedDatesData);
+    } catch (error) {
+      showDatabaseError(error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    storageService.saveAppointments(appointments);
-  }, [appointments]);
+    void loadDatabaseData();
+  }, []);
 
   useEffect(() => {
     storageService.saveSettings(settings);
   }, [settings]);
-
-  useEffect(() => {
-    storageService.saveBlockedDates(blockedDates);
-  }, [blockedDates]);
 
   const sortedAppointments = useMemo(
     () =>
@@ -56,24 +72,16 @@ export const useAppointments = () => {
     if (!isExamType(draft.examType)) return "Tipo de exame obrigatório.";
     if (!isValidScheduleTime(draft.time)) return "Horário inválido.";
 
-    const now = new Date().toISOString();
-    const examType = draft.examType;
-    const time = draft.time;
-    setAppointments((current) => [
-      ...current,
-      {
-        id: createId(),
-        patientName: draft.patientName.trim(),
-        phone: draft.phone.trim(),
-        examType,
-        date: draft.date,
-        time,
-        status: "Agendado",
-        createdAt: now,
-        updatedAt: now,
-        rescheduleHistory: [],
-      },
-    ]);
+    void appointmentsRepository
+      .createAppointment({
+        ...draft,
+        source: draft.source || "Sistema interno",
+      })
+      .then((createdAppointment) => {
+        setAppointments((current) => [...current, createdAppointment]);
+      })
+      .catch(showDatabaseError);
+
     return null;
   };
 
@@ -85,93 +93,107 @@ export const useAppointments = () => {
     if (!isExamType(draft.examType)) return "Tipo de exame obrigatório.";
     if (!isValidScheduleTime(draft.time)) return "Horário inválido.";
 
-    const examType = draft.examType;
-    const time = draft.time;
-    setAppointments((current) =>
-      current.map((appointment) =>
-        appointment.id === id
-          ? {
-              ...appointment,
-              patientName: draft.patientName.trim(),
-              phone: draft.phone.trim(),
-              examType,
-              date: draft.date,
-              time,
-              updatedAt: new Date().toISOString(),
-            }
-          : appointment,
-      ),
-    );
+    void appointmentsRepository
+      .updateAppointment(id, draft)
+      .then((updatedAppointment) => {
+        setAppointments((current) =>
+          current.map((appointment) =>
+            appointment.id === id ? updatedAppointment : appointment,
+          ),
+        );
+      })
+      .catch(showDatabaseError);
+
     return null;
   };
 
   const updateStatus = (id: string, status: AppointmentStatus) => {
-    setAppointments((current) =>
-      current.map((appointment) =>
-        appointment.id === id ? { ...appointment, status, updatedAt: new Date().toISOString() } : appointment,
-      ),
-    );
+    void appointmentsRepository
+      .updateStatus(id, status)
+      .then((updatedAppointment) => {
+        setAppointments((current) =>
+          current.map((appointment) =>
+            appointment.id === id ? updatedAppointment : appointment,
+          ),
+        );
+      })
+      .catch(showDatabaseError);
   };
 
   const requestReschedule = (id: string, reason?: string) => {
-    setAppointments((current) =>
-      current.map((appointment) =>
-        appointment.id === id
-          ? {
-              ...appointment,
-              status: "Solicitou reagendamento",
-              updatedAt: new Date().toISOString(),
-              rescheduleHistory: [
-                ...appointment.rescheduleHistory,
-                {
-                  fromDate: appointment.date,
-                  fromTime: appointment.time,
-                  reason,
-                  status: "Solicitou reagendamento",
-                  createdAt: new Date().toISOString(),
-                },
-              ],
-            }
-          : appointment,
-      ),
-    );
+    const appointment = appointments.find((item) => item.id === id);
+    if (!appointment) return "Agendamento não encontrado.";
+
+    const nextAppointment: Appointment = {
+      ...appointment,
+      status: "Solicitou reagendamento",
+      updatedAt: new Date().toISOString(),
+      rescheduleHistory: [
+        ...appointment.rescheduleHistory,
+        {
+          fromDate: appointment.date,
+          fromTime: appointment.time,
+          reason,
+          status: "Solicitou reagendamento",
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    };
+
+    void appointmentsRepository
+      .updateReschedule(id, nextAppointment)
+      .then((updatedAppointment) => {
+        setAppointments((current) =>
+          current.map((item) => (item.id === id ? updatedAppointment : item)),
+        );
+      })
+      .catch(showDatabaseError);
+
     return null;
   };
 
   const rescheduleAppointment = (id: string, newDate: string, newTime: string, reason?: string) => {
     const appointment = appointments.find((item) => item.id === id);
     if (!appointment) return "Agendamento não encontrado.";
+
     if (isDateBlocked(newDate, blockedDates)) {
       return "Não é possível reagendar para uma data bloqueada.";
     }
+
     const slotError = validateSlot(appointments, blockedDates, newDate, newTime, id);
     if (slotError) return slotError;
 
-    setAppointments((current) =>
-      current.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              date: newDate,
-              time: newTime as Appointment["time"],
-              status: "Reagendado",
-              updatedAt: new Date().toISOString(),
-              rescheduleHistory: [
-                ...item.rescheduleHistory,
-                {
-                  fromDate: item.date,
-                  fromTime: item.time,
-                  toDate: newDate,
-                  toTime: newTime as Appointment["time"],
-                  reason,
-                  status: "Reagendado",
-                  createdAt: new Date().toISOString(),
-                },
-              ],
-            }
-          : item,
-      ),
-    );
+    if (!isValidScheduleTime(newTime)) return "Horário inválido.";
+
+    const nextAppointment: Appointment = {
+      ...appointment,
+      date: newDate,
+      time: newTime,
+      status: "Reagendado",
+      updatedAt: new Date().toISOString(),
+      rescheduleHistory: [
+        ...appointment.rescheduleHistory,
+        {
+          fromDate: appointment.date,
+          fromTime: appointment.time,
+          toDate: newDate,
+          toTime: newTime,
+          reason,
+          status: "Reagendado",
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    };
+
+    void appointmentsRepository
+      .updateReschedule(id, nextAppointment)
+      .then((updatedAppointment) => {
+        setAppointments((current) =>
+          current.map((item) => (item.id === id ? updatedAppointment : item)),
+        );
+      })
+      .catch(showDatabaseError);
+
     return null;
   };
 
@@ -188,23 +210,26 @@ export const useAppointments = () => {
     if (!reason.trim()) return "Informe o motivo do bloqueio.";
     if (!isBlockedDateType(type)) return "Selecione o tipo do bloqueio.";
 
-    const existing = blockedDates.find((blockedDate) => blockedDate.date === date);
-    const blockedDate: BlockedDate = {
-      id: existing?.id ?? createId(),
-      date,
-      reason: reason.trim(),
-      type,
-      createdAt: existing?.createdAt ?? new Date().toISOString(),
-    };
-    setBlockedDates((current) => [
-      ...current.filter((item) => item.date !== date),
-      blockedDate,
-    ]);
+    void appointmentsRepository
+      .addBlockedDate(date, reason, type)
+      .then((blockedDate) => {
+        setBlockedDates((current) => [
+          ...current.filter((item) => item.date !== date),
+          blockedDate,
+        ]);
+      })
+      .catch(showDatabaseError);
+
     return null;
   };
 
   const removeBlockedDate = (id: string) => {
-    setBlockedDates((current) => current.filter((blockedDate) => blockedDate.id !== id));
+    void appointmentsRepository
+      .removeBlockedDate(id)
+      .then(() => {
+        setBlockedDates((current) => current.filter((blockedDate) => blockedDate.id !== id));
+      })
+      .catch(showDatabaseError);
   };
 
   const setSettings = (nextSettings: Settings) => {
@@ -212,16 +237,14 @@ export const useAppointments = () => {
   };
 
   const clearAll = () => {
-    storageService.clearAll();
-    setAppointments([]);
-    setBlockedDates(storageService.getBlockedDates());
-    setSettingsState(storageService.getSettings());
+    window.alert("A limpeza total foi desativada após a migração para banco de dados.");
   };
 
   return {
     appointments: sortedAppointments,
     blockedDates: sortedBlockedDates,
     settings,
+    loading,
     setSettings,
     createAppointment,
     updateAppointment,
@@ -234,5 +257,6 @@ export const useAppointments = () => {
     removeBlockedDate,
     setAppointments,
     clearAll,
+    reloadAppointments: loadDatabaseData,
   };
 };
