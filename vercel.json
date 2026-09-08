@@ -1,8 +1,24 @@
 {
-  "rewrites": [
+  "redirects": [
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "source": "/",
+      "destination": "https://central-codigos-oldemburgo.vercel.app/agenda",
+      "permanent": false
+    },
+    {
+      "source": "/agendar",
+      "destination": "https://central-codigos-oldemburgo.vercel.app/agendar",
+      "permanent": false
+    },
+    {
+      "source": "/agendar/:path*",
+      "destination": "https://central-codigos-oldemburgo.vercel.app/agendar",
+      "permanent": false
+    },
+    {
+      "source": "/:path*",
+      "destination": "https://central-codigos-oldemburgo.vercel.app/agenda",
+      "permanent": false
     }
   ]
 }
